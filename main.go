@@ -117,7 +117,8 @@ func main() {
 			return c.JSON(http.StatusBadRequest, err.Error())
 		}
 
-		if res := db.Delete(&types.Basket{}, id); res.Error != nil {
+		//* hard delete
+		if res := db.Unscoped().Delete(&types.Basket{}, id); res.Error != nil {
 			return c.JSON(http.StatusInternalServerError, res.Error.Error())
 		}
 		return c.JSON(http.StatusOK, "Basket deleted successfully!")
