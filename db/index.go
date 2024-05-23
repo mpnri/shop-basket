@@ -19,7 +19,7 @@ type Basket struct {
 }
 
 func InitDB() *gorm.DB {
-	db, err := gorm.Open(sqlite.Open("shop-basket.db"), &gorm.Config{})
+	db, err := gorm.Open(sqlite.Open("file:data.db"), &gorm.Config{})
 	if err != nil {
 		panic("failed to connect database")
 	}
