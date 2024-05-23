@@ -1,8 +1,10 @@
 package types
 
+import "gorm.io/gorm"
+
 type BasketState int32
 
-//* gorm can't update zero values :_)
+// * gorm can't update zero values :_)
 const (
 	BasketState_PENDING BasketState = iota + 1
 	BasketState_COMPLETED
@@ -22,3 +24,9 @@ const (
 // 	}
 // 	return 0
 // }
+
+type Basket struct {
+	gorm.Model
+	Data  string `gorm:"size:2048"`
+	State BasketState
+}

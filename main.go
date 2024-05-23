@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"net/http"
 	db_manager "shop-basket/db"
-	types "shop-basket/utils"
+	"shop-basket/types"
+	"shop-basket/utils"
 	"strconv"
 
 	"github.com/labstack/echo/v4"
@@ -22,7 +23,7 @@ func main() {
 	})
 
 	e.GET("basket", func(c echo.Context) error {
-		var baskets []db_manager.Basket
+		var baskets []types.Basket
 		if res := db.Find(&baskets); res.Error != nil {
 			return c.JSON(http.StatusInternalServerError, res.Error.Error())
 		}
@@ -31,12 +32,12 @@ func main() {
 	})
 
 	e.GET("basket/:id", func(c echo.Context) error {
-		id, err := strconv.Atoi(c.Param("id"))
+		id, err := utils.GetIntParam(c, "id")
 		if err != nil {
 			return c.JSON(http.StatusBadRequest, err.Error())
 		}
 
-		var basket db_manager.Basket
+		var basket types.Basket
 		if res := db.First(&basket, id); res.Error != nil {
 			return c.JSON(http.StatusInternalServerError, res.Error.Error())
 		}
@@ -50,7 +51,7 @@ func main() {
 		// if err != nil {
 		// 	return c.JSON(http.StatusBadRequest, err)
 		// }
-		basket := db_manager.Basket{Data: data, State: types.BasketState_PENDING}
+		basket := types.Basket{Data: data, State: types.BasketState_PENDING}
 
 		if res := db.Create(&basket); res.Error != nil {
 			return c.JSON(http.StatusInternalServerError, res.Error.Error())
@@ -59,9 +60,7 @@ func main() {
 	})
 
 	e.PATCH("basket/:id", func(c echo.Context) error {
-		var basketQuery db_manager.Basket
-
-		id, err := strconv.Atoi(c.Param("id"))
+		id, err := utils.GetIntParam(c, "id")
 		if err != nil {
 			return c.JSON(http.StatusBadRequest, err.Error())
 		}
@@ -87,7 +86,7 @@ func main() {
 			modifyState = false
 		}
 
-		var oldBasket db_manager.Basket
+		var oldBasket types.Basket
 		if res := db.First(&oldBasket, id); res.Error != nil {
 			return c.JSON(http.StatusInternalServerError, res.Error.Error())
 		}
@@ -96,8 +95,7 @@ func main() {
 			return c.JSON(http.StatusLocked, "completed basket can not be changed")
 		}
 
-		var newBasket db_manager.Basket
-
+		var newBasket types.Basket
 		if modifyData {
 			newBasket.Data = data
 		}
@@ -105,11 +103,23 @@ func main() {
 			newBasket.State = state
 		}
 
-		if res := db.Model(&basketQuery).Where("ID = ?", id).Updates(&newBasket); res.Error != nil {
+		if res := db.Model(&types.Basket{}).Where("ID = ?", id).Updates(&newBasket); res.Error != nil {
 			return c.JSON(http.StatusInternalServerError, res.Error.Error())
 		}
 
-		return c.JSON(http.StatusOK, "Basket successfully modified")
+		return c.JSON(http.StatusOK, "Basket successfully modified!")
+	})
+
+	e.DELETE("basket/:id", func(c echo.Context) error {
+		id, err := utils.GetIntParam(c, "id")
+		if err != nil {
+			return c.JSON(http.StatusBadRequest, err.Error())
+		}
+
+		if res := db.Delete(&types.Basket{}, id); res.Error != nil {
+			return c.JSON(http.StatusInternalServerError, res.Error.Error())
+		}
+		return c.JSON(http.StatusOK, "Basket deleted successfully!")
 	})
 
 	e.Logger.Fatal(e.Start(":3005"))
