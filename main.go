@@ -6,7 +6,6 @@ import (
 	db_manager "shop-basket/db"
 	"shop-basket/types"
 	"shop-basket/utils"
-	"strconv"
 
 	"github.com/labstack/echo/v4"
 	_ "gorm.io/gorm"
@@ -45,13 +44,22 @@ func main() {
 	})
 
 	e.POST("basket", func(c echo.Context) error {
-		//todo: validate data
+		//todo: use validator
 		data := c.FormValue("data")
-		// state, err := strconv.Atoi(c.FormValue("state"))
-		// if err != nil {
-		// 	return c.JSON(http.StatusBadRequest, err)
-		// }
-		basket := types.Basket{Data: data, State: types.BasketState_PENDING}
+		if len(data) > 2048 {
+			return c.JSON(http.StatusBadRequest, "data length limit exceeded!!")
+		}
+
+		stateValue, err, isEmpty := utils.GetIntValue(c, "state")
+		if !isEmpty && err != nil {
+			return c.JSON(http.StatusBadRequest, err.Error())
+		}
+		state, ok := types.BasketStateMap[int32(stateValue)]
+		if isEmpty || !ok {
+			state = types.BasketState_PENDING
+		}
+
+		basket := types.Basket{Data: data, State: state}
 
 		if res := db.Create(&basket); res.Error != nil {
 			return c.JSON(http.StatusInternalServerError, res.Error.Error())
@@ -65,26 +73,19 @@ func main() {
 			return c.JSON(http.StatusBadRequest, err.Error())
 		}
 
-		data := c.FormValue("data")
-		modifyData := true
-		if data == "" {
-			modifyData = false
-		}
+		data, isEmpty := utils.GetStringValue(c, "data")
+		modifyData := !isEmpty
 
-		stateValue := c.FormValue("state")
-		intState, err := strconv.Atoi(stateValue)
-		if stateValue != "" && err != nil {
+		stateValue, err, isEmpty := utils.GetIntValue(c, "state")
+		modifyState := !isEmpty
+		if !isEmpty && err != nil {
 			return c.JSON(http.StatusBadRequest, err.Error())
 		}
 
 		//todo: enum range check with map
 
 		//todo: use proto buff like values
-		state := types.BasketState(intState)
-		modifyState := true
-		if stateValue == "" {
-			modifyState = false
-		}
+		state := types.BasketState(stateValue)
 
 		var oldBasket types.Basket
 		if res := db.First(&oldBasket, id); res.Error != nil {

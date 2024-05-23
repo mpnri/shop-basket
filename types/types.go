@@ -10,6 +10,13 @@ const (
 	BasketState_COMPLETED
 )
 
+var (
+	BasketStateMap = map[int32]BasketState{
+		1: BasketState_PENDING,
+		2: BasketState_COMPLETED,
+	}
+)
+
 // type BasketStateValue struct {
 // 	Value BasketState
 // }
