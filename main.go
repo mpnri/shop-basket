@@ -7,11 +7,17 @@ import (
 	"shop-basket/types"
 	"shop-basket/utils"
 
+	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	_ "gorm.io/gorm"
 )
 
 func main() {
+	if godotenv.Load() != nil {
+		fmt.Println("load env file error")
+		return
+	}
+
 	e := echo.New()
 	db := db_manager.InitDB()
 
