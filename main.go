@@ -9,6 +9,7 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
+	"gorm.io/datatypes"
 	_ "gorm.io/gorm"
 )
 
@@ -65,7 +66,7 @@ func main() {
 			state = types.BasketState_PENDING
 		}
 
-		basket := types.Basket{Data: data, State: state}
+		basket := types.Basket{Data: datatypes.JSON(data), State: state}
 
 		if res := db.Create(&basket); res.Error != nil {
 			return c.JSON(http.StatusInternalServerError, res.Error.Error())
@@ -104,7 +105,7 @@ func main() {
 
 		var newBasket types.Basket
 		if modifyData {
-			newBasket.Data = data
+			newBasket.Data = datatypes.JSON(data)
 		}
 		if modifyState {
 			newBasket.State = state

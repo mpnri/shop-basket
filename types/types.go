@@ -1,6 +1,9 @@
 package types
 
-import "gorm.io/gorm"
+import (
+	"gorm.io/datatypes"
+	"gorm.io/gorm"
+)
 
 type BasketState int32
 
@@ -34,6 +37,6 @@ var (
 
 type Basket struct {
 	gorm.Model
-	Data  string `gorm:"size:2048"`
+	Data  datatypes.JSON `gorm:"size:2048"`
 	State BasketState
 }
