@@ -28,13 +28,13 @@ func GetStringValue(c echo.Context, name string) (string, bool) {
 	return value, isEmpty
 }
 
-func GetIntValue(c echo.Context, name string) (int, error, bool) {
+func GetIntValue(c echo.Context, name string) (int32, error, bool) {
 	value, isEmpty := GetStringValue(c, name)
 	if isEmpty {
 		return 0, nil, isEmpty
 	}
 
 	res, err := strconv.Atoi(value)
-	return res, err, isEmpty
+	return int32(res), err, isEmpty
 }
 

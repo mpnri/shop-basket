@@ -66,7 +66,11 @@ func main() {
 			state = types.BasketState_PENDING
 		}
 
-		basket := types.Basket{Data: datatypes.JSON(data), State: state}
+		basket := types.Basket{
+			Data:  datatypes.JSON(data),
+			State: state,
+			Items: types.Items{},
+		}
 
 		if res := db.Create(&basket); res.Error != nil {
 			return c.JSON(http.StatusInternalServerError, res.Error.Error())
@@ -89,6 +93,13 @@ func main() {
 			return c.JSON(http.StatusBadRequest, err.Error())
 		}
 
+		name, isNameEmpty := utils.GetStringValue(c, "name")
+		price, err, isPriceEmpty := utils.GetIntValue(c, "price")
+		if !isEmpty && err != nil {
+			return c.JSON(http.StatusBadRequest, err.Error())
+		}
+		shouldAddItem := !isNameEmpty && !isPriceEmpty
+
 		//todo: enum range check with map
 
 		//todo: use proto buff like values
@@ -109,6 +120,9 @@ func main() {
 		}
 		if modifyState {
 			newBasket.State = state
+		}
+		if shouldAddItem {
+			newBasket.Items = append(oldBasket.Items, types.Item{Name: name, Price: price})
 		}
 
 		if res := db.Model(&types.Basket{}).Where("ID = ?", id).Updates(&newBasket); res.Error != nil {
