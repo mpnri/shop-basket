@@ -4,7 +4,8 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
-
+	// "github.com/lib/pq"
+	"github.com/golang-jwt/jwt/v5"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
@@ -24,54 +25,52 @@ var (
 	}
 )
 
-// type BasketStateValue struct {
-// 	Value BasketState
-// }
+type User struct {
+	gorm.Model
+	Username string `gorm:"unique"`
+	Password string
+	// Baskets  pq.Int32Array `gorm:"type:integer[]"`
+}
 
-// type Int32Value struct {
-// 	Value int32
-// }
-
-// func (x *Int32Value) GetValue() int32 {
-// 	if x != nil {
-// 		return x.Value
-// 	}
-// 	return 0
-// }
+type Basket struct {
+	gorm.Model
+	UserID uint
+	Data   datatypes.JSON `gorm:"size:2048"`
+	Items  Items          `json:"items" gorm:"type:jsonb"`
+	State  BasketState
+}
 
 type Item struct {
-	Name  string `json:"name"`
-	Price int32  `json:"price"`
+	ShoppingCartID uint
+	Name           string `json:"name"`
+	Price          int32  `json:"price"`
 }
 
 type Items []Item
 
 func (j *Items) Scan(value interface{}) error {
-    bytes, ok := value.([]byte)
-    if !ok {
-        return errors.New("failed to unmarshal JSONB value")
-    }
+	bytes, ok := value.([]byte)
+	if !ok {
+		return errors.New("failed to unmarshal JSONB value")
+	}
 
-    var items Items
-    if err := json.Unmarshal(bytes, &items); err != nil {
-        return err
-    }
+	var items Items
+	if err := json.Unmarshal(bytes, &items); err != nil {
+		return err
+	}
 
-    *j = items
-    return nil
+	*j = items
+	return nil
 }
 
 func (j Items) Value() (driver.Value, error) {
-    if len(j) == 0 {
-        return nil, nil
-    }
-    return json.Marshal(j)
+	if len(j) == 0 {
+		return nil, nil
+	}
+	return json.Marshal(j)
 }
 
-
-type Basket struct {
-	gorm.Model
-	Data  datatypes.JSON `gorm:"size:2048"`
-	Items Items         `json:"items" gorm:"type:jsonb"`
-	State BasketState
+type JwtCustomClaims struct {
+	UserID uint `json:"user_id"`
+	jwt.RegisteredClaims
 }
